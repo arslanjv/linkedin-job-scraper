@@ -1,0 +1,144 @@
+{
+  "name": "Job Scraper + Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "fromEmail": "example-from@example.com",
+        "toEmail": "example-to@example.com",
+        "subject": "Latest LinkedIn Job Postings",
+        "html": "={{ $json[\"htmlBody\"] }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "f1704dac-ce1c-407b-bf51-8cbeb84c4202",
+      "name": "Send email1",
+      "webhookId": "e144eba8-0284-4dd6-8aa4-09448e0650cb",
+      "credentials": {
+        "smtp": {
+          "id": "",
+          "name": "SMTP account (REDACTED)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/:act_id/run-sync-get-dataset-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer <APIFY_API_KEY>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"keywords\": \"Cyber Secuirty\",\n    \"location\": \"Pakistan\",\n    \"maxRows\": 10\n}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        -32
+      ],
+      "id": "92565396-3c75-4490-bb7c-769c93eac1eb",
+      "name": "LinkedIn Job Scrapper"
+    },
+    {
+      "parameters": {
+        "jsCode": "let html = `\n<h2>LinkedIn Job Scraper Results</h2>\n<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;font-family:Arial, sans-serif;\">\n<tr style=\"background-color:#f2f2f2;\">\n<th>Logo</th>\n<th>Job Title</th>\n<th>Company</th>\n<th>Location</th>\n<th>Industry</th>\n<th>Employment Type</th>\n<th>Experience</th>\n<th>Education</th>\n<th>Date Posted</th>\n<th>Valid Through</th>\n<th>Description</th>\n</tr>\n`;\n\nfor (const item of items) {\n    const job = item.json;\n\n    const description = Array.isArray(job.jobDescription)\n        ? `<ul>${job.jobDescription.map(line => `<li>${line}</li>`).join('')}</ul>`\n        : (job.jobDescription || '');\n\n    html += `\n    <tr>\n        <td><img src=\"${job.hiringOrganization?.logo || job.image || ''}\" alt=\"Logo\" width=\"50\" height=\"50\"></td>\n        <td>${job.title || ''}</td>\n        <td><a href=\"${job.hiringOrganization?.sameAs || '#'}\" target=\"_blank\">${job.hiringOrganization?.name || ''}</a></td>\n        <td>${job.jobLocation?.address?.addressLocality || ''}, ${job.jobLocation?.address?.addressCountry || ''}</td>\n        <td>${job.industry || ''}</td>\n        <td>${job.employmentType || ''}</td>\n        <td>${job.experienceRequirements?.monthsOfExperience \n                ? (job.experienceRequirements.monthsOfExperience / 12) + ' years' \n                : ''}</td>\n        <td>${job.educationRequirements?.credentialCategory || ''}</td>\n        <td>${job.datePosted ? new Date(job.datePosted).toLocaleDateString() : ''}</td>\n        <td>${job.validThrough ? new Date(job.validThrough).toLocaleDateString() : ''}</td>\n        <td>${description}</td>\n    </tr>\n    `;\n}\n\nhtml += `</table>`;\n\n// Send HTML to next node (e.g., Email node)\nreturn [{json: {htmlBody: html}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "2974c445-6f3d-4467-83cb-4164e261e938",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 13,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        -32
+      ],
+      "id": "0a844195-7725-45d5-bd9c-7f1b67b89300",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "LinkedIn Job Scrapper": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Send email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Job Scrapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d52a131d-d95c-470d-847c-46db09037d32",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d09e65a2a4d9448ac28e9138cad3b526d107afcbfe628984e3cc335d23e11741"
+  },
+  "id": "KgqfxRv565U5YdkU",
+  "tags": []
+}
