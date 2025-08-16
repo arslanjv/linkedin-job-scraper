@@ -44,7 +44,7 @@ This project automates **LinkedIn job scraping** using [n8n](https://n8n.io) and
     ```
     Bearer <your_apify_token>
     ```
-  - Update the **URL** with your Apify Actor ID for the LinkedIn Scraper:
+  - Update the **URL** with your [Apify Actor ID](https://apify.com/logical_scrapers/linkedin-jobs-scraper) and copy actor id from url for the LinkedIn Scraper:
     ```
     https://api.apify.com/v2/acts/<your-actor-id>/run-sync-get-dataset-items
     ```
